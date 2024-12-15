@@ -108,9 +108,6 @@ onValue(ref(db, "users/"), (snapshot) => {
 
 // data update function
 window.UpdateFunc = function (id) {
-  // console.log(typeof id, id);
-  // console.log(`users/${id}/userDescription`);
-  // console.log(id);
   get(ref(db, `users/${id}`)).then((items) => {
     const { userDescription, typeIE, userAmount } = items.val()
     user_description.value = userDescription
@@ -122,6 +119,7 @@ window.UpdateFunc = function (id) {
   document.querySelector("#Add_Data").classList.add("hidden");
   document.querySelector("#Update").classList.remove("hidden");
   document.querySelector("#Update").classList.add("visible");
+  // Update button event handle
   document.querySelector("#Update").addEventListener("click", () => {
     if (user_description.value.length < 1 && user_amount.value.length > 1) {
       document.querySelector(".description_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please, Enter the Description.`
