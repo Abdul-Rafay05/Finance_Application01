@@ -14,11 +14,11 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 import { getDatabase, ref, set, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 const db = getDatabase(app);
-
 let user_description = document.querySelector("#user_description");
 let user_amount = document.querySelector("#user_amount");
 let user_income_expense = document.querySelector("#user_income_expense");
 let Add_Data = document.querySelector("#Add_Data");
+let currentId;
 // data add function
 Add_Data.addEventListener("click", () => {
   AddData()
@@ -29,8 +29,7 @@ function AddData() {
   if (user_description.value.length < 1 && user_amount.value.length > 1) {
     document.querySelector(".description_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please, Enter the Description.`
     document.querySelector(".amount_status").innerHTML = null
-  }
-  else if (user_description.value.length > 1 && user_amount.value.length < 1) {
+  } else if (user_description.value.length > 1 && user_amount.value.length < 1) {
     document.querySelector(".amount_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please, Enter the Amount.`
     document.querySelector(".description_status").innerHTML = null
   } else if (Number(user_description.value)) {
@@ -39,8 +38,7 @@ function AddData() {
   } else if (user_amount.value < 0) {
     document.querySelector(".amount_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Your Amount must be a positive value.`
     document.querySelector(".description_status").innerHTML = null
-  }
-  else if (user_description.value.length >= 1 && user_amount.value.length >= 1) {
+  } else if (user_description.value.length >= 1 && user_amount.value.length >= 1) {
     set(ref(db, 'users/' + Date.now()), {
       userDescription: user_description.value.toUpperCase(),
       userAmount: Number(user_amount.value),
@@ -54,15 +52,12 @@ function AddData() {
       user_amount.value = null;
       document.querySelector(".description_status").innerHTML = null
       document.querySelector(".amount_status").innerHTML = null
-
-    }).catch((error) => console.log("Unsccessfully", error));
-    document.querySelector("#input_status").innerHTML = null
+    }).catch((error) => alert("UnSuccessfully: " + error));
   } else {
     document.querySelector(".description_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please, Enter Your Description.`
     document.querySelector(".amount_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please Enter Your Amount.`
   }
 }
-
 // data read function
 onValue(ref(db, "users/"), (snapshot) => {
   const data = snapshot.val();
@@ -73,9 +68,6 @@ onValue(ref(db, "users/"), (snapshot) => {
   let show_data = ""
   for (const key in data) {
     const { typeIE, userAmount, userDescription } = data[key]
-    let items = data[key]
-    // console.log(items.useramount);
-    // console.log(items);
     if (typeIE === "Income") {
       Income_total += userAmount
       // console.log("Income: " + items.useramount);
@@ -84,16 +76,16 @@ onValue(ref(db, "users/"), (snapshot) => {
       // console.log("Expense: " + items.useramount);
     }
     show_data += `
-    <tr class="border-2 text-[10px] md:text-base text-center bg-[#1F2937] text-white">
-    <td class="py-3 border-white border-2">${userDescription}</td>
-    <td class="py-3 border-white border-2">${userAmount} /-</td>
-    <td class="py-3 border-white border-2">${typeIE}</td>
-    <td class="operations border-white border-2">
-    <button class="hover:bg-[#dd9219] bg-[#F4A62A] text-white py-1 px-3 my-1 rounded-lg shadow-lg cursor-pointer" onclick="UpdateFunc('${key}')"> <i class="fa-regular fa-pen-to-square"></i></button>
-    <button class="hover:bg-[#e13310] bg-[#FA3F19] text-white py-1 px-3 my-1 rounded-lg hover:shadow-lg cursor-pointer"
-    onclick="DeleteFunc('${key}')"><i class="fa-solid fa-trash-can"></i></button>
-    </td>
-    </tr>`
+      <tr class="border-2 text-[10px] md:text-base text-center bg-[#1F2937] text-white">
+      <td class="py-3 border-white border-2">${userDescription}</td>
+      <td class="py-3 border-white border-2">${userAmount} /-</td>
+      <td class="py-3 border-white border-2">${typeIE}</td>
+      <td class="operations border-white border-2">
+      <button class="hover:bg-[#dd9219] bg-[#F4A62A] text-white py-1 px-3 my-1 rounded-lg shadow-lg cursor-pointer" onclick="UpdateFunc('${key}')"> <i class="fa-regular fa-pen-to-square"></i></button>
+      <button class="hover:bg-[#e13310] bg-[#FA3F19] text-white py-1 px-3 my-1 rounded-lg hover:shadow-lg cursor-pointer"
+      onclick="DeleteFunc('${key}')"><i class="fa-solid fa-trash-can"></i></button>
+      </td>
+      </tr>`
     document.querySelector("#Insert_data").innerHTML = show_data
     Balance_Amount = Income_total - Expense_total
   }
@@ -105,22 +97,25 @@ onValue(ref(db, "users/"), (snapshot) => {
   document.querySelector("#loader").classList.add("hidden")
 })
 
-
 // data update function
 window.UpdateFunc = function (id) {
+  currentId = id;
   get(ref(db, `users/${id}`)).then((items) => {
-    const { userDescription, typeIE, userAmount } = items.val()
-    user_description.value = userDescription
+    const { userDescription, typeIE, userAmount } = items.val();
+    user_description.value = userDescription;
     user_amount.value = userAmount;
     user_income_expense.value = typeIE;
-    // console.log(productname, typeIE, useramount);
-    // console.log(db, `users/${id / userDescription}`);
   });
+  // Toggle buttons
   document.querySelector("#Add_Data").classList.add("hidden");
   document.querySelector("#Update").classList.remove("hidden");
   document.querySelector("#Update").classList.add("visible");
-  // Update button event handle
-  document.querySelector("#Update").addEventListener("click", () => {
+};
+
+// Single event listener
+document.querySelector("#Update").addEventListener("click", () => {
+  if (currentId) {
+    // Validation logic
     if (user_description.value.length < 1 && user_amount.value.length > 1) {
       document.querySelector(".description_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please, Enter the Description.`
       document.querySelector(".amount_status").innerHTML = null
@@ -136,34 +131,36 @@ window.UpdateFunc = function (id) {
       document.querySelector(".description_status").innerHTML = null
     }
     else if (user_description.value.length >= 1 && user_amount.value.length >= 1) {
-      update(ref(db, `users/${id}`), {
+      update(ref(db, `users/${currentId}`), {
         userDescription: user_description.value.toUpperCase(),
         userAmount: Number(user_amount.value),
         typeIE: user_income_expense.value
       }).then(() => {
         document.querySelector(".description_status").innerHTML = null
         document.querySelector(".amount_status").innerHTML = null
+        // Success message aur form reset
         document.getElementById("status").innerHTML = "Update Successfully"
         setTimeout(() => {
           document.getElementById("status").innerHTML = null
         }, 2000);
+        currentId = null;
+        // Toggle buttons back
         user_description.value = null;
         user_amount.value = null;
         document.querySelector("#Add_Data").classList.remove("hidden")
         document.querySelector("#Add_Data").classList.add("visible")
         document.querySelector("#Update").classList.remove("visible")
         document.querySelector("#Update").classList.add("hidden")
-      }).catch((error) => { alert("some Err or occurred" + error) })
+      }).catch((error) => { alert("Error: " + error) });
     } else {
       document.querySelector(".description_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please, Enter Your Description.`
       document.querySelector(".amount_status").innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> Please Enter Your Amount.`
     }
-  })
-}
-
+  }
+});
 // data delete function
+
 window.DeleteFunc = function (id) {
-  console.log(typeof id);
   remove(ref(db, `users/${id}`));
   document.getElementById("status").innerHTML = "Deleted Successfully"
   setTimeout(() => {
