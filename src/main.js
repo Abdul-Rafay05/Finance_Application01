@@ -10,15 +10,19 @@ const firebaseConfig = {
   appId: "1:164590268202:web:d12d6a7fee6ff23cccb853",
   measurementId: "G-LV6JJ9740X",
 };
+
+
+import { getDatabase, ref, set, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-import { getDatabase, ref, set, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 const db = getDatabase(app);
 let user_description = document.querySelector("#user_description");
 let user_amount = document.querySelector("#user_amount");
 let user_income_expense = document.querySelector("#user_income_expense");
 let Add_Data = document.querySelector("#Add_Data");
 let currentId;
+
+
 // data add function
 Add_Data.addEventListener("click", () => {
   AddData()
@@ -167,3 +171,5 @@ window.DeleteFunc = function (id) {
     document.getElementById("status").innerHTML = null
   }, 2000);
 }
+
+
